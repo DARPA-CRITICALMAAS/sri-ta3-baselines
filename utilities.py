@@ -27,17 +27,17 @@ def load_features_list():
 
 def neighbor_deposits(df):
     # merging Deposit and Occurrence
-    df['MVT_Deposit'] = df.apply(lambda row: 1 if 'Present' in [row['Training_MVT_Deposit'], row['Training_MVT_Occurrence']] else 0, axis=1)
+    df['MVT_Deposit'] = df.apply(lambda row: True if True in [row['Training_MVT_Deposit'], row['Training_MVT_Occurrence']] else False, axis=1)
 
     #  converting H3_Geometry POLYGON(()) to list of 6 coordinates [(* *), (* *), (* *), (* *), (* *), (* *)]
-    df['H3_Geometry'] = df['H3_Geometry'].apply(lambda x: x[10:-2].split(', ')[:-1])
+    df['H3_Geometry2'] = df['H3_Geometry'].apply(lambda x: x[10:-2].split(', ')[:-1])
 
     # filtering df with MVT_Deposit present
-    df_present = df[df['MVT_Deposit']==1] # there are 2027 rows
+    df_present = df[df['MVT_Deposit']==True] # for MVT there are 2027 rows
 
     # record all vertices of MVT_Deposit Present polygons
-    present_coordinates = [] # -> 9915 vertices
-    for coordinates in df_present['H3_Geometry']:
+    present_coordinates = [] # -> for MVT 9915 vertices
+    for coordinates in df_present['H3_Geometry2']:
         for coordinate in coordinates:
             if coordinate not in present_coordinates:
                 present_coordinates.append(coordinate)
@@ -45,5 +45,6 @@ def neighbor_deposits(df):
                 
     # checking if any of 6 vertices of polygon are in present_coordinates
     # if YES then it's a neighbor or itself polygon
-    df['MVT_Deposit_wNeighbors'] = df.apply(lambda x: 1 if (present_coordinates & set(x['H3_Geometry'])) else 0, axis=1)
+    df['MVT_Deposit_wNeighbors'] = df.apply(lambda x: True if (present_coordinates & set(x['H3_Geometry2'])) else False, axis=1)
+    df = df.drop(columns=['H3_Geometry2'])
     return df
