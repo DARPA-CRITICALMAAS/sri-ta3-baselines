@@ -1,6 +1,6 @@
 import pandas as pd
 
-def load_dataset(filename='/data/2021_Table04_Datacube.csv', encoding_type='latin-1', index_col=None):
+def load_dataset(filename='data/2021_Table04_Datacube.csv', encoding_type='latin-1', index_col=None):
     df = pd.read_csv(filename, encoding=encoding_type, index_col=index_col)
     return df
 
