@@ -6,6 +6,13 @@
 6. Implement code that selects best threshold with cross validation - not needed in WOE
 7. Implement code that evaluates WOE model on test set - done using AUC
 8. House keeping - move more notebook functions to utility for reuse
-9. Implement success rate AUC functionality / plot
-10. Recreate baseline result in paper
+9. Implement success rate AUC - done
+10. Recreate baseline result in paper - done / conversation with Lawley TBD
+11. Recreate CD deposit/occurences experiment, in addition MVT - Vasily
 11. Extend above to the "updated" WOE
+    a. Updating the input columns / data
+    b. Category rebinning? - Angel
+12. Extend the above to the H2O model - gradient boosting machines with scikit-learn?
+    a. ???
+    b. ???
+13. Begin familiarizing with EIS tools, other tools to massage, clean, georeference, etc. input data
