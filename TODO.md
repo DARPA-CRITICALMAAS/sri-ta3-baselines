@@ -10,7 +10,7 @@
 10. Recreate baseline result in paper - done / conversation with Lawley TBD
 11. Recreate CD deposit/occurences experiment, in addition MVT - Vasily
 11. Extend above to the "updated" WOE
-    a. Updating the input columns / data
+    a. Updating the input columns / data - Angel
     b. Category rebinning? - Angel
 12. Extend the above to the H2O model - gradient boosting machines with scikit-learn?
     a. ???

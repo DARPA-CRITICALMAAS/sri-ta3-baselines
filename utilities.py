@@ -1,10 +1,16 @@
 import pandas as pd
+import numpy as np
+from math import ceil
+
+from sklearn.model_selection import GroupKFold
+
 
 def load_dataset(filename='data/2021_Table04_Datacube.csv', encoding_type='latin-1', index_col=None):
     df = pd.read_csv(filename, encoding=encoding_type, index_col=index_col)
     return df
 
-def load_features_list():
+
+def load_features_list(key="baseline"):
     baseline_cols = [
         "H3_Geometry",                                      # Polygon with coordinates of the vertices
         "Seismic_LAB_Priestley",                            # Depth to LAB
@@ -48,3 +54,79 @@ def neighbor_deposits(df):
     df['MVT_Deposit_wNeighbors'] = df.apply(lambda x: True if (present_coordinates & set(x['H3_Geometry2'])) else False, axis=1)
     df = df.drop(columns=['H3_Geometry2'])
     return df
+
+
+def tukey_remove_outliers(df, multiplier=1.5, replacement_percentile=0.05):
+    for col in df.columns:
+        # get the IQR
+        Q1 = df.loc[:,col].quantile(0.25)
+        Q3 = df.loc[:,col].quantile(0.75)
+        IQR = Q3 - Q1
+        # get the lower bound replacements and replace the values
+        P05 = df.loc[:,col].quantile(replacement_percentile)
+        mask = df.loc[:,col] < (Q1 - multiplier * IQR)
+        df.loc[mask, col] = P05
+        # get the upper bound replacements and replace the values
+        P95 = df.loc[:,col].quantile(1.0-replacement_percentile)
+        mask = df.loc[:,col] > (Q3 + multiplier * IQR)
+        df.loc[mask, col] = P95
+    return df
+
+
+def impute_nans(df):
+    # fills nan values with mean, for each column
+    for col in df.columns:
+        df[col].fillna(value=df[col].mean(), inplace=True)
+    return df
+
+
+def normalize_df(df):
+    # standardizes the data
+    return (df-df.mean()) / df.std()
+
+
+def calculate_woe_iv(dataset, feature, target):
+    lst = []
+    for i in range(dataset[feature].nunique()):
+        val = list(dataset[feature].unique())[i]
+        lst.append({
+            'Value': val,
+            'All': dataset[dataset[feature] == val].count()[feature],
+            'Good': dataset[(dataset[feature] == val) & (dataset[target] == 1)].count()[feature],
+            'Bad': dataset[(dataset[feature] == val) & (dataset[target] == 0)].count()[feature]
+        }) 
+    dset = pd.DataFrame(lst)
+    dset['Distr_Good'] = dset['Good'] / dset['Good'].sum()
+    dset['Distr_Bad'] = dset['Bad'] / dset['Bad'].sum()
+    dset['WoE'] = np.log(dset['Distr_Good'] / dset['Distr_Bad'])
+    dset = dset.replace({'WoE': {np.inf: 0, -np.inf: 0}})
+    dset['IV'] = (dset['Distr_Good'] - dset['Distr_Bad']) * dset['WoE']
+    iv = dset['IV'].sum()
+    dset = dset.sort_values(by='WoE')
+    return dset, iv
+
+
+def get_spatial_cross_val_idx(df, k=5):
+    # select only the deposit/occurence/neighbor present samples
+    target_df = df.loc[df["target"] == True,"Latitude_EPSG4326"]
+    # sort the latitudes
+    target_df = target_df.sort_values(ignore_index=True)
+    # bin the latitudes into sizes of 1-3 samples per bin
+    nbins = ceil(len(target_df) / 3.0)
+    _, bins = pd.qcut(target_df, nbins, retbins=True)
+    bins[0] = -float("inf")
+    bins[-1] = float("inf")
+    bins = pd.IntervalIndex.from_breaks(bins)
+    # group the bins into k+1 groups (folds) - +1 is for test set
+    bins_df = pd.DataFrame({"Latitude_EPSG4326": bins})
+    bins_df["group"] = np.tile(np.arange(k+1), (ceil(nbins / k+1),))[:nbins]
+    # assign all data to a k+1 group using the existing bin / group assignments
+    df["Latitude_EPSG4326"] = pd.cut(df["Latitude_EPSG4326"], bins)
+    df = pd.merge(df, bins_df, on="Latitude_EPSG4326")
+    # split into train / test data
+    test_df = df[df["group"] == k]
+    train_df = df[df["group"] < k]
+    # generate a group k-fold sampling
+    group_kfold = GroupKFold(n_splits=k)
+    train_idx = group_kfold.split(train_df, train_df["target"], train_df["group"])
+    return test_df, train_df, train_idx
