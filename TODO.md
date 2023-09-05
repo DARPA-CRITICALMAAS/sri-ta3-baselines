@@ -12,10 +12,10 @@
 11. Recreate CD deposit/occurences baseline experiment - Vasily (done)
     a. CD Deposit baseline model (WOE) - done (train & all AUC very similar | test AUC ~5% lower than Lawley's)
 12. Extend above to the "updated" WOE
-    a. Updating the input columns / data - Vasily
-    b. Category rebinning? - Angel
-    c. MVT Deposit updated model (WOE) - 
-    d. CD Deposit updated model (WOE) -
+    a. Updating the input columns / data - Vasily (done)
+    b. Category rebinning - Angel (done)
+    c. MVT Deposit updated model (WOE) - Angel
+    d. CD Deposit updated model (WOE) - Angel
 13. Extend the above to the H2O model - gradient boosting machines with scikit-learn?
     a. ???
     b. ???
