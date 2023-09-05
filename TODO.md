@@ -8,11 +8,21 @@
 8. Move more notebook functions to utility for reuse - done
 9. Implement success rate AUC - done
 10. Recreate baseline result in paper - done / conversation with Lawley TBD
-11. Recreate CD deposit/occurences experiment, in addition MVT - Vasily
-11. Extend above to the "updated" WOE
+    a. MVT Deposit baseline model (WOE) - done (train & all AUCs higher than Lawley's | test AUC very similar) 
+11. Recreate CD deposit/occurences baseline experiment - Vasily (done)
+    a. CD Deposit baseline model (WOE) - done (train & all AUC very similar | test AUC ~5% lower than Lawley's)
+12. Extend above to the "updated" WOE
     a. Updating the input columns / data - Vasily
     b. Category rebinning? - Angel
-12. Extend the above to the H2O model - gradient boosting machines with scikit-learn?
+    c. MVT Deposit updated model (WOE) - 
+    d. CD Deposit updated model (WOE) -
+13. Extend the above to the H2O model - gradient boosting machines with scikit-learn?
     a. ???
     b. ???
-13. Begin familiarizing with EIS tools, other tools to massage, clean, georeference, etc. input data
+    c. MTV Deposit preferred model (H20/ML) - 
+    d. MTV Deposit preferred model (H20/ML) - 
+14. Begin familiarizing with EIS tools, other tools to massage, clean, georeference, etc. input data
+
+    
+     
+    
