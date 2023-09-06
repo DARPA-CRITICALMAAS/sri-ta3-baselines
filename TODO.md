@@ -9,9 +9,9 @@
 9. Implement success rate AUC - done
 10. Recreate baseline result in paper - done / conversation with Lawley TBD
 11. Recreate CD deposit/occurences experiment, in addition MVT - Vasily
-11. Extend above to the "updated" WOE
-    a. Updating the input columns / data - Vasily
-    b. Category rebinning? - Angel
+11. Extend above to the "updated" WOE (done)
+    a. Updating the input columns / data - Vasily & Angel (done)
+    b. Category rebinning? - Angel (done)
 12. Extend the above to the H2O model - gradient boosting machines with scikit-learn?
     a. ???
     b. ???

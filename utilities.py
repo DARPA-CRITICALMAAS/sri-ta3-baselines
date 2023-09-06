@@ -10,91 +10,172 @@ def load_dataset(filename='data/2021_Table04_Datacube.csv', encoding_type='latin
     return df
 
 
-def load_features_list(type=['MVT','CD'], baseline=['baseline', 'updated', 'preferred']):
+def load_features_dict(type=['MVT','CD'], baseline=['baseline', 'updated', 'preferred']):
     # Note that the order of the created list is very important, particularly for WOE
     if baseline == 'baseline':
-        cols = [
-            "H3_Geometry",                                      # Polygon with coordinates of the vertices
-            "Seismic_LAB_Priestley",                            # Depth to LAB
-            "Seismic_Moho",                                     # Depth to Moho
-            "Gravity_GOCE_ShapeIndex",                          # Sattelite Gravity
-            "Gravity_Bouguer",                                  # Gravity Bouger
-            "Gravity_Bouguer_HGM",                              # Gravity HGM
-            "Gravity_Bouguer_UpCont30km_HGM",                   # Gravity upward cont'd HGM
-            "Gravity_Bouguer_HGM_Worms_Proximity",              # Gravity worms
-            "Gravity_Bouguer_UpCont30km_HGM_Worms_Proximity",   # Gravity upward cont'd worms
-            "Magnetic_HGM",                                     # Magnetic HGM
-            "Magnetic_LongWavelength_HGM",                      # Magnetic long-wavelength HGM
-            "Magnetic_HGM_Worms_Proximity",                     # Magnetic worms
-            "Magnetic_LongWavelength_HGM_Worms_Proximity",      # Magnetic long-wavelength worms
-        ]
+        cols = {
+            "H3_Geometry": None,                                        # Polygon with coordinates of the vertices
+            "Seismic_LAB_Priestley": None,                              # Depth to LAB
+            "Seismic_Moho": None,                                       # Depth to Moho
+            "Gravity_GOCE_ShapeIndex": None,                            # Sattelite Gravity
+            "Gravity_Bouguer": None,                                    # Gravity Bouger
+            "Gravity_Bouguer_HGM": None,                                # Gravity HGM
+            "Gravity_Bouguer_UpCont30km_HGM": None,                     # Gravity upward cont'd HGM
+            "Gravity_Bouguer_HGM_Worms_Proximity": None,                # Gravity worms
+            "Gravity_Bouguer_UpCont30km_HGM_Worms_Proximity": None,     # Gravity upward cont'd worms
+            "Magnetic_HGM": None,                                       # Magnetic HGM
+            "Magnetic_LongWavelength_HGM": None,                        # Magnetic long-wavelength HGM
+            "Magnetic_HGM_Worms_Proximity": None,                       # Magnetic worms
+            "Magnetic_LongWavelength_HGM_Worms_Proximity": None,        # Magnetic long-wavelength worms
+        }
     elif baseline == 'updated':
-        cols = [
-            "H3_Geometry",                                      # Polygon with coordinates of the vertices
-            "Geology_Lithology_Majority",                       # Lithology (major)
-            "",                 # Period (maximum)
-            "",                 # Period (minimum)
-            "Geology_Dictionary_Sedimentary",                   # Sedimentary dictionaries
-            "Geology_Dictionary_Igneous",                       # Igneous dictionaries
-            "",                 # Metamorphic dictionaries
-            "Seismic_LAB_Priestley",                            # Depth to LAB                              ??? Why Priestley?
-            "Seismic_Moho",                                     # Depth to Moho
-            "Gravity_GOCE_ShapeIndex",                          # Satellite gravity
-            "Geology_Paleolatitude_Period_Minimum",             # Paleo-latitude                            ??? could be Geology_Paleolatitude_Period_Maximum
-            "Terrane_Proximity",                                # Proximity to terrane boundaries
-            "Geology_PassiveMargin_Proximity",                  # Proximity to passive margins
-            "Geology_BlackShale_Proximity",                     # Proximity to black shales
-            "Geology_Fault_Proximity",                          # Proximity to faults
-            "Gravity_Bouguer",                                  # Gravity Bouguer
-            "Gravity_Bouguer_HGM",                              # Gravity HGM
-            "Gravity_Bouguer_UpCont30km_HGM",                   # Gravity upward continued HGM
-            "Gravity_Bouguer_HGM_Worms_Proximity",              # Gravity worms
-            "Gravity_Bouguer_UpCont30km_HGM_Worms_Proximity",   # Gravity upward continued worms
-            "Magnetic_HGM",                                     # Magnetic HGM
-            "Magnetic_LongWavelength_HGM",                      # Magnetic long-wavelength HGM
-            "Magnetic_HGM_Worms_Proximity",                     # Magnetic worms
-            "Magnetic_LongWavelength_HGM_Worms_Proximity",      # Magnetic long-wavelength worms
-        ]
+        cols = {
+            "H3_Geometry": None,                                        # Polygon with coordinates of the vertices
+            "Geology_Lithology_Majority": None,                         # Lithology (major) - these seem to be grouped into ~9 categories based on paper
+            "Geology_Period_Maximum_Majority": None,                    # Period (maximum) - option 1
+            "Geology_Period_Minimum_Majority": None,                    # Period (minimum) - option 1
+            # "Geology_Period_Maximum_Minority": None,                  # Period (maximum) - option 2
+            # "Geology_Period_Minimum_Minority": None,                  # Period (minimum) - option 2
+            "Sedimentary_Dictionary": [                                            # Sedimentary dictionaries
+                "Geology_Dictionary_Calcareous",
+                "Geology_Dictionary_Carbonaceous",
+                "Geology_Dictionary_FineClastic"
+            ],  
+            "Igneous_Dictionary": [                                                # Igneous dictionaries
+                "Geology_Dictionary_Felsic",
+                "Geology_Dictionary_Intermediate",
+                "Geology_Dictionary_UltramaficMafic"
+            ],      
+            "Metamorphic_Dictionary": [                                            # Metamorphic dictionaries
+                "Geology_Dictionary_Anatectic",
+                "Geology_Dictionary_Gneissose",
+                "Geology_Dictionary_Schistose"
+            ],                 
+            "Seismic_LAB_Priestley": None,                              # Depth to LAB                              ??? Why Priestley?
+            "Seismic_Moho": None,                                       # Depth to Moho
+            "Gravity_GOCE_ShapeIndex": None,                            # Satellite gravity
+            "Geology_Paleolatitude_Period_Minimum": None,               # Paleo-latitude                            ??? could be Geology_Paleolatitude_Period_Maximum
+            "Terrane_Proximity": None,                                  # Proximity to terrane boundaries
+            "Geology_PassiveMargin_Proximity": None,                    # Proximity to passive margins
+            "Geology_BlackShale_Proximity": None,                       # Proximity to black shales
+            "Geology_Fault_Proximity": None,                            # Proximity to faults
+            "Gravity_Bouguer": None,                                    # Gravity Bouguer
+            "Gravity_Bouguer_HGM": None,                                # Gravity HGM
+            "Gravity_Bouguer_UpCont30km_HGM": None,                     # Gravity upward continued HGM
+            "Gravity_Bouguer_HGM_Worms_Proximity": None,                # Gravity worms
+            "Gravity_Bouguer_UpCont30km_HGM_Worms_Proximity": None,     # Gravity upward continued worms
+            "Magnetic_HGM": None,                                       # Magnetic HGM
+            "Magnetic_LongWavelength_HGM": None,                        # Magnetic long-wavelength HGM
+            "Magnetic_HGM_Worms_Proximity": None,                       # Magnetic worms
+            "Magnetic_LongWavelength_HGM_Worms_Proximity": None,        # Magnetic long-wavelength worms
+        }
     elif  baseline == 'preferred':
-        cols = [
-            "H3_Geometry",                                      # Polygon with coordinates of the vertices
-            "Geology_Lithology_Majority",                       # Lithology (major)
-            "Geology_Lithology_Minority",                       # Lithology (minority)
-            "",                 # Period (maximum)
-            "",                 # Period (minimum)
-            "Geology_Dictionary_Sedimentary",                   # Sedimentary dictionaries
-            "Geology_Dictionary_Igneous",                       # Igneous dictionaries
-            "",                 # Metamorphic dictionaries
-            "Seismic_LAB_Priestley",                            # Depth to LAB                              ??? Why Priestley?
-            "Seismic_Moho",                                     # Depth to Moho
-            "Gravity_GOCE_ShapeIndex",                          # Satellite gravity
-            "Geology_Paleolatitude_Period_Minimum",             # Paleo-latitude                            ??? could be Geology_Paleolatitude_Period_Maximum
-            "Terrane_Proximity",                                # Proximity to terrane boundaries
-            "Geology_PassiveMargin_Proximity",                  # Proximity to passive margins
-            "Geology_BlackShale_Proximity",                     # Proximity to black shales
-            "Geology_Fault_Proximity",                          # Proximity to faults
-            "Gravity_Bouguer",                                  # Gravity Bouguer
-            "Gravity_Bouguer_HGM",                              # Gravity HGM
-            "Gravity_Bouguer_UpCont30km_HGM",                   # Gravity upward continued HGM
-            "Gravity_Bouguer_HGM_Worms_Proximity",              # Gravity worms
-            "Gravity_Bouguer_UpCont30km_HGM_Worms_Proximity",   # Gravity upward continued worms
-            "Magnetic_HGM",                                     # Magnetic HGM
-            "Magnetic_LongWavelength_HGM",                      # Magnetic long-wavelength HGM
-            "Magnetic_HGM_Worms_Proximity",                     # Magnetic worms
-            "Magnetic_LongWavelength_HGM_Worms_Proximity",      # Magnetic long-wavelength worms
-        ]
+        cols = {
+            "H3_Geometry": None,                                        # Polygon with coordinates of the vertices
+            "Geology_Lithology_Majority": None,                         # Lithology (majority)
+            "Geology_Lithology_Minority": None,                         # Lithology (minority)
+            "Geology_Period_Maximum_Majority": None,                    # Period (maximum) - option 1
+            "Geology_Period_Minimum_Majority": None,                    # Period (minimum) - option 1
+            # "Geology_Period_Maximum_Minority": None,                  # Period (maximum) - option 2
+            # "Geology_Period_Minimum_Minority": None,                  # Period (minimum) - option 2
+            "Sedimentary_Dictionary": [                                            # Sedimentary dictionaries
+                "Geology_Dictionary_Calcareous",
+                "Geology_Dictionary_Carbonaceous",
+                "Geology_Dictionary_FineClastic"
+            ],  
+            "Igneous_Dictionary": [                                                # Igneous dictionaries
+                "Geology_Dictionary_Felsic",
+                "Geology_Dictionary_Intermediate",
+                "Geology_Dictionary_UltramaficMafic"
+            ],      
+            "Metamorphic_Dictionary": [                                            # Metamorphic dictionaries
+                "Geology_Dictionary_Anatectic",
+                "Geology_Dictionary_Gneissose",
+                "Geology_Dictionary_Schistose"
+            ],                 
+            "Seismic_LAB_Priestley": None,                              # Depth to LAB                              ??? Why Priestley?
+            "Seismic_Moho": None,                                       # Depth to Moho
+            "Gravity_GOCE_ShapeIndex": None,                            # Satellite gravity
+            "Geology_Paleolatitude_Period_Minimum": None,               # Paleo-latitude                            ??? could be Geology_Paleolatitude_Period_Maximum
+            "Terrane_Proximity": None,                                  # Proximity to terrane boundaries
+            "Geology_PassiveMargin_Proximity": None,                    # Proximity to passive margins
+            "Geology_BlackShale_Proximity": None,                       # Proximity to black shales
+            "Geology_Fault_Proximity": None,                            # Proximity to faults
+            "Gravity_Bouguer": None,                                    # Gravity Bouguer
+            "Gravity_Bouguer_HGM": None,                                # Gravity HGM
+            "Gravity_Bouguer_UpCont30km_HGM": None,                     # Gravity upward continued HGM
+            "Gravity_Bouguer_HGM_Worms_Proximity": None,                # Gravity worms
+            "Gravity_Bouguer_UpCont30km_HGM_Worms_Proximity": None,     # Gravity upward continued worms
+            "Magnetic_HGM": None,                                       # Magnetic HGM
+            "Magnetic_LongWavelength_HGM": None,                        # Magnetic long-wavelength HGM
+            "Magnetic_HGM_Worms_Proximity": None,                       # Magnetic worms
+            "Magnetic_LongWavelength_HGM_Worms_Proximity": None,        # Magnetic long-wavelength worms
+        }
     else:
         raise ValueError('Baseline should one of the following: baseline, updated, or preferred')
     
     if type == 'MVT':
-        cols.append("Training_MVT_Deposit")                     # Target variable MVT_Deposit
-        cols.append("Training_MVT_Occurrence")                  # Target variable MVT_Occurrence
+        cols["Training_MVT_Deposit"] = None                     # Target variable MVT_Deposit
+        cols["Training_MVT_Occurrence"] = None                  # Target variable MVT_Occurrence
     elif type == 'CD':
-        cols.append("Training_CD_Deposit")                      # Target variable CD_Deposit
-        cols.append("Training_CD_Occurrence")                   # Target variable CD_Occurrence
+        cols["Training_CD_Deposit"] = None                      # Target variable CD_Deposit
+        cols["Training_CD_Occurrence"] = None                   # Target variable CD_Occurrence
     else:
         raise ValueError('Deposit types are either MVT or CD')
     return cols
+
+
+DEFAULT_LITHOLOGY_MAP = {
+    "Igneous_Extrusive": "Igneous_Extrusive",
+    "Igneous_Intrusive": "Igneous_Intrusive_Felsic",
+    "Igneous_Intrusive_Alkalic": "Igneous_Intrusive_Felsic",
+    "Igneous_Intrusive_Anorthosite": "Igneous_Intrusive_Felsic",
+    "Igneous_Intrusive_Felsic": "Igneous_Intrusive_Felsic",
+    "Igneous_Intrusive_Felsic_Felsite": "Igneous_Intrusive_Felsic",
+    "Igneous_Intrusive_Felsic_Pegmatite": "Igneous_Intrusive_Felsic",
+    "Igneous_Intrusive_Felsic_Tonalite": "Igneous_Intrusive_Felsic",
+    "Igneous_Intrusive_Intermediate": "Igneous_Intrusive_Felsic",
+    "Igneous_Intrusive_Mafic": "Igneous_Intrusive_Mafic",
+    "Igneous_Intrusive_Ultramafic": "Igneous_Intrusive_Mafic",
+    "Metamorphic_Amphibolite": "Igneous_Intrusive_Mafic",
+    "Metamorphic_Eclogite": "Metamorphic_Gneiss",
+    "Metamorphic_Gneiss": "Metamorphic_Gneiss",
+    "Metamorphic_Gneiss_Orthogneiss": "Metamorphic_Gneiss_Paragneiss",
+    "Metamorphic_Gneiss_Paragneiss": "Metamorphic_Gneiss_Paragneiss",
+    "Metamorphic_Charnockite": "Metamorphic_Gneiss",
+    "Metamorphic_Granulite": "Metamorphic_Gneiss",
+    "Metamorphic_Marble": "Metamorphic_Gneiss",
+    "Metamorphic_Migmatite": "Metamorphic_Gneiss",
+    "Metamorphic_Schist": "Metamorphic_Schist",
+    "Metamorphic_Quartzite": "Metamorphic_Gneiss_Paragneiss",
+    "Other_Fault": "Other_Unconsolidated",
+    "Other_Hydrothermal": "Other_Unconsolidated",
+    "Other_Melange": "Metamorphic_Schist",
+    "Other_Unconsolidated": "Other_Unconsolidated",
+    "Other_Unknown": "Other_Unconsolidated",
+    "Sedimentary_Chemical": "Sedimentary_Chemical",
+    "Sedimentary_Chemical_Carbonate": "Sedimentary_Chemical",
+    "Sedimentary_Chemical_Evaporite": "Sedimentary_Chemical",
+    "Sedimentary_Siliciclastic": "Sedimentary_Siliciclastic",
+}
+
+
+def extract_cols(df, cols_dict, lith_map=DEFAULT_LITHOLOGY_MAP):
+    # extracts the feature columns from the datacube, re-binning where necessary
+    # NOTE - we may need to remap lithology minority ONLY
+    out_df = pd.DataFrame()
+    for col_name, col_items in cols_dict.items():
+        if "LITHOLOGY" in col_name.upper():
+            # special "re-binning" should be applied to lithology data
+            out_df[col_name] = df[col_name].replace(lith_map)
+        else:    
+            if col_items is None:
+                # existing column, no merging required
+                out_df[col_name] = df[col_name]
+            else:
+                # special "re-binning" applies to geology columns - sedimentary, igneous, metamorphic
+                out_df[col_name] = df.loc[:,col_items].any(axis=1)
+    return out_df, list(cols_dict.keys())
 
 
 def neighbor_deposits(df, type=['MVT','CD']):
@@ -124,6 +205,7 @@ def neighbor_deposits(df, type=['MVT','CD']):
 
 def tukey_remove_outliers(df, multiplier=1.5, replacement_percentile=0.05):
     for col in df.columns:
+        if df[col].dtype != "float64": continue
         # get the IQR
         Q1 = df.loc[:,col].quantile(0.25)
         Q3 = df.loc[:,col].quantile(0.75)
@@ -142,13 +224,20 @@ def tukey_remove_outliers(df, multiplier=1.5, replacement_percentile=0.05):
 def impute_nans(df):
     # fills nan values with mean, for each column
     for col in df.columns:
-        df[col].fillna(value=df[col].mean(), inplace=True)
+        if df[col].isna().sum():
+            if df[col].dtype != "float64" and "Geology_Period" in col:
+                df[col].fillna("Quaternary", inplace=True)
+            else:
+                df[col].fillna(value=df[col].mean(), inplace=True)
     return df
 
 
 def normalize_df(df):
     # standardizes the data
-    return (df-df.mean()) / df.std()
+    for col in df.columns:
+        if df[col].dtype != "float64": continue
+        df[col] = (df[col]-df[col].mean()) / df[col].std()
+    return df
 
 
 def calculate_woe_iv(dataset, feature, target):
