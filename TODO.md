@@ -15,13 +15,13 @@
     b. Category rebinning - Angel (done)
     c. MVT Deposit updated model (WOE) - done (MVT ~91% AUC - likely needs some minor changes to match closer)
     d. CD Deposit updated model (WOE) - done (CV ~90% AUC - likely needs some minor changes to match closer)
-12. Extend the above to the H2O model - gradient boosting machines with scikit-learn?
-    a. ???
-    b. ???
-    c. MTV Deposit preferred model (H20/ML) - 
-    d. MTV Deposit preferred model (H20/ML) - 
-14. Begin familiarizing with EIS tools, other tools to massage, clean, georeference, etc. input data
-
-    
-     
+12. Extend the above to the H2O model - gradient boosting machines with scikit-learn? (done)
+    a. MVT Deposit preferred model (H20/ML) - (done)
+    b. CD Deposit preferred model (H20/ML) - (done)
+15. Release the MVT code
+    a. Ensure MVT baseline WOE matches paper (>1% difference)
+    b. Ensure MVT updated WOE matches paper (>1% difference)
+    c. Ensure MVT preferred GBM matches paper (>1% difference)
+    To try:
+    - switch to deposits only for cross val split, still train with all data
     

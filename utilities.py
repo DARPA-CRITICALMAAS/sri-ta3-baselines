@@ -160,7 +160,31 @@ DEFAULT_LITHOLOGY_MAP = {
 }
 
 
-def extract_cols(df, cols_dict, lith_map=DEFAULT_LITHOLOGY_MAP):
+DEFAULT_GEOLOGY_PERIOD_MAP = {
+    "Cambrian": "Cambrian",
+    "Cretaceous": "Cretaceous",
+    "Devonian": "Devonian",
+    "Eoarchean": "Neoarchean",
+    "Jurassic": "Jurassic",
+    "Mesoarchean": "Neoarchean",
+    "Mesoproterozoic": "Mesoproterozoic",
+    "Mississippian": "Mississippian",
+    "Neoarchean": "Neoarchean",
+    "Neogene": "Neogene",
+    "Neoproterozoic": "Neoproterozoic",
+    "Ordovician": "Ordovician",
+    "Paleoarchean": "Neoarchean",
+    "Paleogene": "Paleogene",
+    "Paleoproterozoic": "Paleoproterozoic",
+    "Pennsylvanian": "Pennsylvanian",
+    "Permian": "Permian",
+    "Quaternary": "Quaternary",
+    "Silurian": "Silurian",
+    "Triassic": "Triassic",
+}
+
+
+def extract_cols(df, cols_dict, lith_map=DEFAULT_LITHOLOGY_MAP, perd_map=DEFAULT_GEOLOGY_PERIOD_MAP):
     # extracts the feature columns from the datacube, re-binning where necessary
     # NOTE - we may need to remap lithology minority ONLY
     out_df = pd.DataFrame()
@@ -168,6 +192,9 @@ def extract_cols(df, cols_dict, lith_map=DEFAULT_LITHOLOGY_MAP):
         if "LITHOLOGY" in col_name.upper():
             # special "re-binning" should be applied to lithology data
             out_df[col_name] = df[col_name].replace(lith_map)
+        elif "GEOLOGY_PERIOD" in col_name.upper():
+            # special "re-binning" should be applied to geology period data
+            out_df[col_name] = df[col_name].replace(perd_map)
         else:    
             if col_items is None:
                 # existing column, no merging required
