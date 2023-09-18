@@ -51,14 +51,15 @@ def load_features_dict(type=['MVT','CD'], baseline=['baseline', 'updated', 'pref
                 "Geology_Dictionary_Gneissose",
                 "Geology_Dictionary_Schistose"
             ],                 
-            "Seismic_LAB_Priestley": None,                              # Depth to LAB                              ??? Why Priestley?
-            "Seismic_Moho": None,                                       # Depth to Moho
-            "Gravity_GOCE_ShapeIndex": None,                            # Satellite gravity
-            "Geology_Paleolatitude_Period_Minimum": None,               # Paleo-latitude                            ??? could be Geology_Paleolatitude_Period_Maximum
+            "Geology_Paleolatitude_Period_Maximum": None,               # Paleo-latitude
             "Terrane_Proximity": None,                                  # Proximity to terrane boundaries
             "Geology_PassiveMargin_Proximity": None,                    # Proximity to passive margins
             "Geology_BlackShale_Proximity": None,                       # Proximity to black shales
             "Geology_Fault_Proximity": None,                            # Proximity to faults
+
+            "Seismic_LAB_Priestley": None,                              # Depth to LAB                              ??? Why Priestley?
+            "Seismic_Moho": None,                                       # Depth to Moho
+            "Gravity_GOCE_ShapeIndex": None,                            # Satellite gravity
             "Gravity_Bouguer": None,                                    # Gravity Bouguer
             "Gravity_Bouguer_HGM": None,                                # Gravity HGM
             "Gravity_Bouguer_UpCont30km_HGM": None,                     # Gravity upward continued HGM
@@ -138,16 +139,16 @@ DEFAULT_LITHOLOGY_MAP = {
     "Igneous_Intrusive_Mafic": "Igneous_Intrusive_Mafic",
     "Igneous_Intrusive_Ultramafic": "Igneous_Intrusive_Mafic",
     "Metamorphic_Amphibolite": "Igneous_Intrusive_Mafic",
+    "Metamorphic_Charnockite": "Metamorphic_Gneiss",
     "Metamorphic_Eclogite": "Metamorphic_Gneiss",
     "Metamorphic_Gneiss": "Metamorphic_Gneiss",
-    "Metamorphic_Gneiss_Orthogneiss": "Metamorphic_Gneiss_Paragneiss",
-    "Metamorphic_Gneiss_Paragneiss": "Metamorphic_Gneiss_Paragneiss",
-    "Metamorphic_Charnockite": "Metamorphic_Gneiss",
+    "Metamorphic_Gneiss_Orthogneiss": "Metamorphic_Gneiss", # Metamorphic_Gneiss_Magmatic?
+    "Metamorphic_Gneiss_Paragneiss": "Metamorphic_Gneiss_Paragneiss", # Metamorphic_Gneiss_Supracrustal?
     "Metamorphic_Granulite": "Metamorphic_Gneiss",
-    "Metamorphic_Marble": "Metamorphic_Gneiss",
+    "Metamorphic_Marble": "Sedimentary_Chemical",
     "Metamorphic_Migmatite": "Metamorphic_Gneiss",
-    "Metamorphic_Schist": "Metamorphic_Schist",
     "Metamorphic_Quartzite": "Metamorphic_Gneiss_Paragneiss",
+    "Metamorphic_Schist": "Metamorphic_Schist",
     "Other_Fault": "Other_Unconsolidated",
     "Other_Hydrothermal": "Other_Unconsolidated",
     "Other_Melange": "Metamorphic_Schist",
@@ -289,13 +290,12 @@ def calculate_woe_iv(dataset, feature, target):
     return dset, iv
 
 
-def get_spatial_cross_val_idx(df, k=5):
+def get_spatial_cross_val_idx(df, k=5, test_set=0, split_col="target", nbins=None, samples_per_bin=3.0):
     # select only the deposit/occurence/neighbor present samples
-    target_df = df.loc[df["target"] == True,"Latitude_EPSG4326"]
-    # sort the latitudes
-    target_df = target_df.sort_values(ignore_index=True)
+    target_df = df.loc[df[split_col] == True,"Latitude_EPSG4326"]
     # bin the latitudes into sizes of 1-3 samples per bin
-    nbins = ceil(len(target_df) / 3.0)
+    if nbins is None:
+        nbins = ceil(len(target_df) / samples_per_bin)
     _, bins = pd.qcut(target_df, nbins, retbins=True)
     bins[0] = -float("inf")
     bins[-1] = float("inf")
@@ -307,8 +307,8 @@ def get_spatial_cross_val_idx(df, k=5):
     df["Latitude_EPSG4326"] = pd.cut(df["Latitude_EPSG4326"], bins)
     df = pd.merge(df, bins_df, on="Latitude_EPSG4326")
     # split into train / test data
-    test_df = df[df["group"] == k]
-    train_df = df[df["group"] < k]
+    test_df = df[df["group"] == test_set]
+    train_df = df[df["group"] != test_set]
     # generate a group k-fold sampling
     group_kfold = GroupKFold(n_splits=k)
     train_idx = group_kfold.split(train_df, train_df["target"], train_df["group"])
