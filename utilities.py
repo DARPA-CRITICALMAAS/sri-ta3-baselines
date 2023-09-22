@@ -10,7 +10,9 @@ def load_dataset(filename='data/2021_Table04_Datacube.csv', encoding_type='latin
     return df
 
 
-def load_features_dict(type=['MVT','CD'], baseline=['baseline', 'updated', 'preferred']):
+def load_features_dict(deptype='MVT', baseline='baseline']):
+    assert deptype in ['MVT','CD']
+    assert baseline in ['baseline', 'updated', 'preferred']
     # Note that the order of the created list is very important, particularly for WOE
     if baseline == 'baseline':
         cols = {
@@ -115,14 +117,12 @@ def load_features_dict(type=['MVT','CD'], baseline=['baseline', 'updated', 'pref
     else:
         raise ValueError('Baseline should one of the following: baseline, updated, or preferred')
     
-    if type == 'MVT':
+    if deptype == 'MVT':
         cols["Training_MVT_Deposit"] = None                     # Target variable MVT_Deposit
         cols["Training_MVT_Occurrence"] = None                  # Target variable MVT_Occurrence
-    elif type == 'CD':
+    elif deptype == 'CD':
         cols["Training_CD_Deposit"] = None                      # Target variable CD_Deposit
         cols["Training_CD_Occurrence"] = None                   # Target variable CD_Occurrence
-    else:
-        raise ValueError('Deposit types are either MVT or CD')
     return cols
 
 
@@ -206,15 +206,16 @@ def extract_cols(df, cols_dict, lith_map=DEFAULT_LITHOLOGY_MAP, perd_map=DEFAULT
     return out_df, list(cols_dict.keys())
 
 
-def neighbor_deposits(df, type=['MVT','CD']):
+def neighbor_deposits(df, deptype='MVT'):
+    assert deptype in ['MVT','CD']
     # merging Deposit and Occurrence
-    df[f'{type}_Deposit'] = df.apply(lambda row: True if True in [row[f'Training_{type}_Deposit'], row[f'Training_{type}_Occurrence']] else False, axis=1)
+    df[f'{deptype}_Deposit'] = df.apply(lambda row: True if True in [row[f'Training_{deptype}_Deposit'], row[f'Training_{deptype}_Occurrence']] else False, axis=1)
 
     #  converting H3_Geometry POLYGON(()) to list of 6 coordinates [(* *), (* *), (* *), (* *), (* *), (* *)]
     df['H3_Geometry2'] = df['H3_Geometry'].apply(lambda x: x[10:-2].split(', ')[:-1])
 
     # filtering df with MVT_Deposit present
-    df_present = df[df[f'{type}_Deposit']==True] # for MVT there are 2027 rows
+    df_present = df[df[f'{deptype}_Deposit']==True] # for MVT there are 2027 rows
 
     # record all vertices of MVT_Deposit Present polygons
     present_coordinates = [] # -> for MVT 9915 vertices
@@ -226,7 +227,7 @@ def neighbor_deposits(df, type=['MVT','CD']):
                 
     # checking if any of 6 vertices of polygon are in present_coordinates
     # if YES then it's a neighbor or itself polygon
-    df[f'{type}_Deposit_wNeighbors'] = df.apply(lambda x: True if (present_coordinates & set(x['H3_Geometry2'])) else False, axis=1)
+    df[f'{deptype}_Deposit_wNeighbors'] = df.apply(lambda x: True if (present_coordinates & set(x['H3_Geometry2'])) else False, axis=1)
     df = df.drop(columns=['H3_Geometry2'])
     return df
 
