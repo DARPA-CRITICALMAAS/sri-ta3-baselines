@@ -4,6 +4,8 @@ from math import ceil
 from tqdm import tqdm
 import rasterio
 import rasterio.features
+import matplotlib.pyplot as plt
+import matplotlib as mpl
 
 from sklearn.model_selection import GroupKFold
 
@@ -18,6 +20,7 @@ def load_features_dict(type=['MVT','CD'], baseline=['baseline', 'updated', 'pref
     if baseline == 'baseline':
         cols = {
             "H3_Geometry": None,                                        # Polygon with coordinates of the vertices
+            "Continent_Majority": None,                                 # used to separate US/Canada from Australia
             "Seismic_LAB_Priestley": None,                              # Depth to LAB
             "Seismic_Moho": None,                                       # Depth to Moho
             "Gravity_GOCE_ShapeIndex": None,                            # Sattelite Gravity
@@ -34,6 +37,7 @@ def load_features_dict(type=['MVT','CD'], baseline=['baseline', 'updated', 'pref
     elif baseline == 'updated':
         cols = {
             "H3_Geometry": None,                                        # Polygon with coordinates of the vertices
+            "Continent_Majority": None,                                 # used to separate US/Canada from Australia
             "Geology_Lithology_Majority": None,                         # Lithology (major) - these seem to be grouped into ~9 categories based on paper
             "Geology_Period_Maximum_Majority": None,                    # Period (maximum) - option 1
             "Geology_Period_Minimum_Majority": None,                    # Period (minimum) - option 1
@@ -76,6 +80,7 @@ def load_features_dict(type=['MVT','CD'], baseline=['baseline', 'updated', 'pref
     elif  baseline == 'preferred':
         cols = {
             "H3_Geometry": None,                                        # Polygon with coordinates of the vertices
+            "Continent_Majority": None,                                 # used to separate US/Canada from Australia
             "Geology_Lithology_Majority": None,                         # Lithology (majority)
             "Geology_Lithology_Minority": None,                         # Lithology (minority)
             "Geology_Period_Maximum_Majority": None,                    # Period (maximum) - option 1
@@ -93,48 +98,6 @@ def load_features_dict(type=['MVT','CD'], baseline=['baseline', 'updated', 'pref
                 "Geology_Dictionary_UltramaficMafic"
             ],      
             "Metamorphic_Dictionary": [                                            # Metamorphic dictionaries
-                "Geology_Dictionary_Anatectic",
-                "Geology_Dictionary_Gneissose",
-                "Geology_Dictionary_Schistose"
-            ],                 
-            "Seismic_LAB_Priestley": None,                              # Depth to LAB                              ??? Why Priestley?
-            "Seismic_Moho": None,                                       # Depth to Moho
-            "Gravity_GOCE_ShapeIndex": None,                            # Satellite gravity
-            "Geology_Paleolatitude_Period_Minimum": None,               # Paleo-latitude                            ??? could be Geology_Paleolatitude_Period_Maximum
-            "Terrane_Proximity": None,                                  # Proximity to terrane boundaries
-            "Geology_PassiveMargin_Proximity": None,                    # Proximity to passive margins
-            "Geology_BlackShale_Proximity": None,                       # Proximity to black shales
-            "Geology_Fault_Proximity": None,                            # Proximity to faults
-            "Gravity_Bouguer": None,                                    # Gravity Bouguer
-            "Gravity_Bouguer_HGM": None,                                # Gravity HGM
-            "Gravity_Bouguer_UpCont30km_HGM": None,                     # Gravity upward continued HGM
-            "Gravity_Bouguer_HGM_Worms_Proximity": None,                # Gravity worms
-            "Gravity_Bouguer_UpCont30km_HGM_Worms_Proximity": None,     # Gravity upward continued worms
-            "Magnetic_HGM": None,                                       # Magnetic HGM
-            "Magnetic_LongWavelength_HGM": None,                        # Magnetic long-wavelength HGM
-            "Magnetic_HGM_Worms_Proximity": None,                       # Magnetic worms
-            "Magnetic_LongWavelength_HGM_Worms_Proximity": None,        # Magnetic long-wavelength worms
-        }
-    elif baseline == 'ours':
-        cols = {
-            "H3_Geometry": None,                                        # Polygon with coordinates of the vertices
-            "Continent_Majority": None,                                 # used to separate US/Canada from Australia
-            "Geology_Lithology_Majority": None,                         # Lithology (majority)
-            "Geology_Period_Maximum_Majority": None,                    # Period (maximum) - option 1
-            "Geology_Period_Minimum_Majority": None,                    # Period (minimum) - option 1
-            # "Geology_Period_Maximum_Minority": None,                  # Period (maximum) - option 2
-            # "Geology_Period_Minimum_Minority": None,                  # Period (minimum) - option 2
-            "Sedimentary_Dictionary": [                                 # Sedimentary dictionaries
-                "Geology_Dictionary_Calcareous",
-                "Geology_Dictionary_Carbonaceous",
-                "Geology_Dictionary_FineClastic"
-            ],  
-            "Igneous_Dictionary": [                                     # Igneous dictionaries
-                "Geology_Dictionary_Felsic",
-                "Geology_Dictionary_Intermediate",
-                "Geology_Dictionary_UltramaficMafic"
-            ],      
-            "Metamorphic_Dictionary": [                                 # Metamorphic dictionaries
                 "Geology_Dictionary_Anatectic",
                 "Geology_Dictionary_Gneissose",
                 "Geology_Dictionary_Schistose"
@@ -363,24 +326,21 @@ def get_spatial_cross_val_idx(df, k=5, test_set=0, split_col="target", nbins=Non
 def convert_categorical(df, category_col):
     categories = np.unique(df[category_col]).tolist()
     categories_dict = {category: float(idx) for idx, category in enumerate(categories)}
-    df[category_col] = df[category_col].replace(categories_dict).astype("float64")
+    df[category_col] = df[category_col].replace(categories_dict).astype("uint8")
     return df
     
 
 def rasterize_datacube(datacube, meta, data_dir, region):
-    datacube["target"] = datacube["target"].astype("float64")
-    datacube["Sedimentary_Dictionary"] = datacube["Sedimentary_Dictionary"].astype("float64")
-    datacube["Igneous_Dictionary"] = datacube["Igneous_Dictionary"].astype("float64")
-    datacube["Metamorphic_Dictionary"] = datacube["Metamorphic_Dictionary"].astype("float64")
-
     tif_layers = [col for col in datacube.columns.to_list() if ("Continent" not in col) and ("H3" not in col)]
+    meta.update(count=len(tif_layers))
 
-    for tif_layer in tqdm(tif_layers, total=len(tif_layers)):
-        if datacube[tif_layer].dtype != "float64" and datacube[tif_layer].dtype != "bool":
-            datacube = convert_categorical(datacube, tif_layer)
-
-        datacube_tif_file = f"{data_dir}datacube_{region}_{tif_layer}.tif"
-        with rasterio.open(datacube_tif_file, "w", **meta) as out:
+    datacube_tif_file = f"{data_dir}datacube_{region}.tif"
+    with rasterio.open(datacube_tif_file, "w", **meta) as out:
+        for idx, tif_layer in tqdm(enumerate(tif_layers), total=len(tif_layers)):
+            # converts categoricals to ints
+            if datacube[tif_layer].dtype != "float64" and datacube[tif_layer].dtype != "bool":
+                datacube = convert_categorical(datacube, tif_layer)
+            
             # this is where we create a generator of geom, value pairs to use in rasterizing
             shapes = list(datacube.loc[:,["H3_Geometry",tif_layer]].itertuples(index=False, name=None))
             burned = rasterio.features.rasterize(
@@ -388,6 +348,35 @@ def rasterize_datacube(datacube, meta, data_dir, region):
                 out_shape=(meta["height"],meta["width"]),
                 fill=meta["nodata"],
                 transform=out.transform,
-                dtype="float64"
             )
-            out.write_band(1, burned)
+
+            # writes the n-dim tif
+            out.write_band(idx+1, burned)
+
+
+def visualize_datacube(datacube, meta):
+    tif_layers = [col for col in datacube.columns.to_list() if ("Continent" not in col) and ("H3" not in col)]
+
+    for idx, tif_layer in tqdm(enumerate(tif_layers), total=len(tif_layers)):
+        # converts categoricals to ints
+        if datacube[tif_layer].dtype != "float64" and datacube[tif_layer].dtype != "bool":
+            datacube = convert_categorical(datacube, tif_layer)
+
+        # this is where we create a generator of geom, value pairs to use in rasterizing
+        shapes = list(datacube.loc[:,["H3_Geometry",tif_layer]].itertuples(index=False, name=None))
+        burned = rasterio.features.rasterize(
+            shapes=shapes,
+            out_shape=(meta["height"],meta["width"]),
+            fill=np.nan,
+            transform=meta["transform"]
+        )
+
+        if datacube[tif_layer].dtype == "bool":
+            cmap = mpl.colors.ListedColormap(['black', 'red'])
+            plt.imshow(burned, cmap=cmap)
+        else:
+            plt.imshow(burned, cmap="turbo")
+            plt.colorbar()
+        
+        plt.title(tif_layer)
+        plt.show()
