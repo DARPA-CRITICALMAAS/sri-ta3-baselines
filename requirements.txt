@@ -1,12 +1,13 @@
-# install via conda install -c conda-forge --file requirements.txt
 numpy
+pandas
+geopandas
+scikit-learn
 matplotlib
+tqdm
 scipy
+ipykernel
 notebook
 jupyterlab
 mpld3
-ipykernel
-scikit-learn
-tqdm
-pandas
 seaborn
+shapely
