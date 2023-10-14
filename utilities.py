@@ -1,6 +1,11 @@
 import pandas as pd
 import numpy as np
 from math import ceil
+from tqdm import tqdm
+import rasterio
+import rasterio.features
+import matplotlib.pyplot as plt
+import matplotlib as mpl
 
 from sklearn.model_selection import GroupKFold
 
@@ -17,6 +22,7 @@ def load_features_dict(deptype='MVT', baseline='baseline']):
     if baseline == 'baseline':
         cols = {
             "H3_Geometry": None,                                        # Polygon with coordinates of the vertices
+            "Continent_Majority": None,                                 # used to separate US/Canada from Australia
             "Seismic_LAB_Priestley": None,                              # Depth to LAB
             "Seismic_Moho": None,                                       # Depth to Moho
             "Gravity_GOCE_ShapeIndex": None,                            # Sattelite Gravity
@@ -33,6 +39,7 @@ def load_features_dict(deptype='MVT', baseline='baseline']):
     elif baseline == 'updated':
         cols = {
             "H3_Geometry": None,                                        # Polygon with coordinates of the vertices
+            "Continent_Majority": None,                                 # used to separate US/Canada from Australia
             "Geology_Lithology_Majority": None,                         # Lithology (major) - these seem to be grouped into ~9 categories based on paper
             "Geology_Period_Maximum_Majority": None,                    # Period (maximum) - option 1
             "Geology_Period_Minimum_Majority": None,                    # Period (minimum) - option 1
@@ -75,6 +82,7 @@ def load_features_dict(deptype='MVT', baseline='baseline']):
     elif  baseline == 'preferred':
         cols = {
             "H3_Geometry": None,                                        # Polygon with coordinates of the vertices
+            "Continent_Majority": None,                                 # used to separate US/Canada from Australia
             "Geology_Lithology_Majority": None,                         # Lithology (majority)
             "Geology_Lithology_Minority": None,                         # Lithology (minority)
             "Geology_Period_Maximum_Majority": None,                    # Period (maximum) - option 1
@@ -314,3 +322,62 @@ def get_spatial_cross_val_idx(df, k=5, test_set=0, split_col="target", nbins=Non
     group_kfold = GroupKFold(n_splits=k)
     train_idx = group_kfold.split(train_df, train_df["target"], train_df["group"])
     return test_df, train_df, train_idx
+
+
+def convert_categorical(df, category_col):
+    categories = np.unique(df[category_col]).tolist()
+    categories_dict = {category: float(idx) for idx, category in enumerate(categories)}
+    df[category_col] = df[category_col].replace(categories_dict).astype("uint8")
+    return df
+    
+
+def rasterize_datacube(datacube, meta, data_dir, region):
+    tif_layers = [col for col in datacube.columns.to_list() if ("Continent" not in col) and ("H3" not in col)]
+    meta.update(count=len(tif_layers))
+
+    datacube_tif_file = f"{data_dir}datacube_{region}.tif"
+    with rasterio.open(datacube_tif_file, "w", **meta) as out:
+        for idx, tif_layer in tqdm(enumerate(tif_layers), total=len(tif_layers)):
+            # converts categoricals to ints
+            if datacube[tif_layer].dtype != "float64" and datacube[tif_layer].dtype != "bool":
+                datacube = convert_categorical(datacube, tif_layer)
+            
+            # this is where we create a generator of geom, value pairs to use in rasterizing
+            shapes = list(datacube.loc[:,["H3_Geometry",tif_layer]].itertuples(index=False, name=None))
+            burned = rasterio.features.rasterize(
+                shapes=shapes,
+                out_shape=(meta["height"],meta["width"]),
+                fill=meta["nodata"],
+                transform=out.transform,
+            )
+
+            # writes the n-dim tif
+            out.write_band(idx+1, burned)
+
+
+def visualize_datacube(datacube, meta):
+    tif_layers = [col for col in datacube.columns.to_list() if ("Continent" not in col) and ("H3" not in col)]
+
+    for idx, tif_layer in tqdm(enumerate(tif_layers), total=len(tif_layers)):
+        # converts categoricals to ints
+        if datacube[tif_layer].dtype != "float64" and datacube[tif_layer].dtype != "bool":
+            datacube = convert_categorical(datacube, tif_layer)
+
+        # this is where we create a generator of geom, value pairs to use in rasterizing
+        shapes = list(datacube.loc[:,["H3_Geometry",tif_layer]].itertuples(index=False, name=None))
+        burned = rasterio.features.rasterize(
+            shapes=shapes,
+            out_shape=(meta["height"],meta["width"]),
+            fill=np.nan,
+            transform=meta["transform"]
+        )
+
+        if datacube[tif_layer].dtype == "bool":
+            cmap = mpl.colors.ListedColormap(['black', 'red'])
+            plt.imshow(burned, cmap=cmap)
+        else:
+            plt.imshow(burned, cmap="turbo")
+            plt.colorbar()
+        
+        plt.title(tif_layer)
+        plt.show()
