@@ -15,7 +15,7 @@ def load_dataset(filename='data/2021_Table04_Datacube.csv', encoding_type='latin
     return df
 
 
-def load_features_dict(deptype='MVT', baseline='baseline']):
+def load_features_dict(deptype='MVT', baseline='baseline'):
     assert deptype in ['MVT','CD']
     assert baseline in ['baseline', 'updated', 'preferred']
     # Note that the order of the created list is very important, particularly for WOE
@@ -334,6 +334,9 @@ def convert_categorical(df, category_col):
 def rasterize_datacube(datacube, meta, data_dir, region):
     tif_layers = [col for col in datacube.columns.to_list() if ("Continent" not in col) and ("H3" not in col)]
     meta.update(count=len(tif_layers))
+    meta.update(tiled=True)
+    meta.update(blockxsize=32)
+    meta.update(blockysize=32)
 
     datacube_tif_file = f"{data_dir}datacube_{region}.tif"
     with rasterio.open(datacube_tif_file, "w", **meta) as out:
