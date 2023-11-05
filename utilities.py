@@ -15,7 +15,7 @@ def load_dataset(filename='data/2021_Table04_Datacube.csv', encoding_type='latin
     return df
 
 
-def load_features_dict(deptype='MVT', baseline='baseline']):
+def load_features_dict(deptype='MVT', baseline='baseline'):
     assert deptype in ['MVT','CD']
     assert baseline in ['baseline', 'updated', 'preferred']
     # Note that the order of the created list is very important, particularly for WOE
@@ -83,6 +83,7 @@ def load_features_dict(deptype='MVT', baseline='baseline']):
         cols = {
             "H3_Geometry": None,                                        # Polygon with coordinates of the vertices
             "Continent_Majority": None,                                 # used to separate US/Canada from Australia
+            "Latitude_EPSG4326": None,                                  # used to split data
             "Geology_Lithology_Majority": None,                         # Lithology (majority)
             "Geology_Lithology_Minority": None,                         # Lithology (minority)
             "Geology_Period_Maximum_Majority": None,                    # Period (maximum) - option 1
@@ -264,6 +265,8 @@ def impute_nans(df):
         if df[col].isna().sum():
             if df[col].dtype != "float64" and "Geology_Period" in col:
                 df[col].fillna("Quaternary", inplace=True)
+            elif df[col].dtype != "float64":
+                df[col].fillna("UNK", inplace=True)
             else:
                 df[col].fillna(value=df[col].mean(), inplace=True)
     return df
@@ -333,6 +336,7 @@ def convert_categorical(df, category_col):
 
 def rasterize_datacube(datacube, meta, data_dir, region):
     tif_layers = [col for col in datacube.columns.to_list() if ("Continent" not in col) and ("H3" not in col)]
+    print(f"Outputting - {tif_layers}")
     meta.update(count=len(tif_layers))
 
     datacube_tif_file = f"{data_dir}datacube_{region}.tif"
