@@ -336,6 +336,9 @@ def convert_categorical(df, category_col):
 
 def rasterize_datacube(datacube, meta, data_dir, region):
     tif_layers = [col for col in datacube.columns.to_list() if ("Continent" not in col) and ("H3" not in col)]
+    meta.update(tiled=True)
+    meta.update(blockxsize=32)
+    meta.update(blockysize=32)
     print(f"Outputting - {tif_layers}")
 
     for idx, tif_layer in tqdm(enumerate(tif_layers), total=len(tif_layers)):
