@@ -337,17 +337,16 @@ def convert_categorical(df, category_col):
 def rasterize_datacube(datacube, meta, data_dir, region):
     tif_layers = [col for col in datacube.columns.to_list() if ("Continent" not in col) and ("H3" not in col)]
     print(f"Outputting - {tif_layers}")
-    meta.update(count=len(tif_layers))
 
-    datacube_tif_file = f"{data_dir}datacube_{region}.tif"
-    with rasterio.open(datacube_tif_file, "w", **meta) as out:
-        for idx, tif_layer in tqdm(enumerate(tif_layers), total=len(tif_layers)):
+    for idx, tif_layer in tqdm(enumerate(tif_layers), total=len(tif_layers)):
+        datacube_tif_file = f"{data_dir}datacube_{region}_{tif_layer.lower().replace(' ','-')}.tif"
+        with rasterio.open(datacube_tif_file, "w", **meta) as out:
             # converts categoricals to ints
             if datacube[tif_layer].dtype != "float64" and datacube[tif_layer].dtype != "bool":
                 datacube = convert_categorical(datacube, tif_layer)
             
             # this is where we create a generator of geom, value pairs to use in rasterizing
-            shapes = list(datacube.loc[:,["H3_Geometry",tif_layer]].itertuples(index=False, name=None))
+            shapes = list(datacube.loc[:,["H3_Geometry", tif_layer]].itertuples(index=False, name=None))
             burned = rasterio.features.rasterize(
                 shapes=shapes,
                 out_shape=(meta["height"],meta["width"]),
@@ -356,11 +355,12 @@ def rasterize_datacube(datacube, meta, data_dir, region):
             )
 
             # writes the n-dim tif
-            out.write_band(idx+1, burned)
+            out.write_band(1, burned)
 
 
 def visualize_datacube(datacube, meta):
     tif_layers = [col for col in datacube.columns.to_list() if ("Continent" not in col) and ("H3" not in col)]
+    print(f"Plotting - {tif_layers}")
 
     for idx, tif_layer in tqdm(enumerate(tif_layers), total=len(tif_layers)):
         # converts categoricals to ints
